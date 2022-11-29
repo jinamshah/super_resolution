@@ -1,0 +1,9 @@
+B.ipynb_checkpoints
+.div2k
+.ckpt
+.idea/
+*/__pycache__/*
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
