@@ -11,9 +11,11 @@ from nni.compression.pytorch.speedup import ModelSpeedup
 from model import VDSR
 import train as train_def
 from torch.cuda import amp
+import os
+from torch.utils.tensorboard import SummaryWriter
 
 
-epochs = 1
+epochs = 10
 
 if __name__ == '__main__':
     device = 'cuda'
@@ -58,17 +60,16 @@ if __name__ == '__main__':
 
     
     # Running the pre-training stage with pruned model
-    # optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
     train_prefetcher, valid_prefetcher, test_prefetcher = train_def.load_dataset()
     psnr_criterion, pixel_criterion = train_def.define_loss()
     scaler = amp.GradScaler()
-    # writer = SummaryWriter(os.path.join("samples", "logs", config.exp_name))
+    writer = SummaryWriter(os.path.join("samples", "logs", "vdsr_pruning"))
 
     for epoch in range(epochs):
-        train_def.train(model, train_prefetcher, psnr_criterion, pixel_criterion, optimizer, epoch, scaler, None)
-        psnr = train_def.validate(model, test_prefetcher, psnr_criterion, epoch, None, "Test")
+        train_def.train(model, train_prefetcher, psnr_criterion, pixel_criterion, optimizer, epoch, scaler, writer)
+        psnr = train_def.validate(model, test_prefetcher, psnr_criterion, epoch, writer, "Test")
 
-    print(f"PSNR: {psnr}")
+    print(f"\n********\nPSNR: {psnr}\n********\n")
 
     torch.save(model, f'./pruned_model.torch')
     print('Pruned model saved')
@@ -83,4 +84,5 @@ if __name__ == '__main__':
         do_constant_folding=True,
         input_names=["data"],
         output_names=["output"],
+        opset_version=11
     )

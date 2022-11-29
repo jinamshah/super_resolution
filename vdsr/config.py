@@ -35,9 +35,9 @@ exp_name = "vdsr_baseline"
 
 if mode == "train":
     # Dataset
-    train_image_dir = "data/TB291/VDSR/train"
-    valid_image_dir = "data/TB291/VDSR/valid"
-    test_image_dir = "data/Set5/GTmod12"
+    train_image_dir = "data/Urban100/VDSR/train"
+    valid_image_dir = "data/Urban100/VDSR/valid"
+    test_image_dir = "data/T91"
 
     image_size = 41
     batch_size = 16
@@ -48,7 +48,7 @@ if mode == "train":
     resume = ""
 
     # Total num epochs
-    epochs = 80
+    epochs = 10
 
     # SGD optimizer parameter
     model_lr = 0.1
