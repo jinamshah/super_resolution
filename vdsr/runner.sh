@@ -9,7 +9,7 @@ source ~/.bashrc
 module load cuda/10.2.0
 module load anaconda3
 
-cd /jet/home/jshah2/super_resolution
+cd /jet/home/jshah2/super_resolution/vdsr
 conda activate gpu
 
 # to generate dataset

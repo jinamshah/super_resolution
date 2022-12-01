@@ -27,8 +27,14 @@ if __name__ == '__main__':
     optimizer = train_def.define_optimizer(model)
     optimizer.load_state_dict(model_chkpt['optimizer'])
 
+    train_prefetcher, valid_prefetcher, test_prefetcher = train_def.load_dataset()
+    psnr_criterion, pixel_criterion = train_def.define_loss()
+    scaler = amp.GradScaler()
+    writer = SummaryWriter(os.path.join("samples", "logs", "vdsr_pruning"))
+
     print("ORIGINAL UN-PRUNED MODEL: \n\n", model, "\n\n")
-    
+    psnr = train_def.validate(model, test_prefetcher, psnr_criterion, 1, writer, "Test")
+    print(f"******\nOriginal PSNR: {psnr}\n*****")
     torch.save(model, f'./unpruned_model.torch')
     print('Unpruned model saved')
 
@@ -60,10 +66,7 @@ if __name__ == '__main__':
 
     
     # Running the pre-training stage with pruned model
-    train_prefetcher, valid_prefetcher, test_prefetcher = train_def.load_dataset()
-    psnr_criterion, pixel_criterion = train_def.define_loss()
-    scaler = amp.GradScaler()
-    writer = SummaryWriter(os.path.join("samples", "logs", "vdsr_pruning"))
+    
 
     for epoch in range(epochs):
         train_def.train(model, train_prefetcher, psnr_criterion, pixel_criterion, optimizer, epoch, scaler, writer)
