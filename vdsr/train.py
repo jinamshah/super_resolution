@@ -284,12 +284,12 @@ def validate(model, valid_prefetcher, psnr_criterion, epoch, writer, mode) -> fl
     # Print average PSNR metrics
     progress.display_summary()
 
-    # if mode == "Valid":
-    #     writer.add_scalar("Valid/PSNR", psnres.avg, epoch + 1)
-    # elif mode == "Test":
-    #     writer.add_scalar("Test/PSNR", psnres.avg, epoch + 1)
-    # else:
-    #     raise ValueError("Unsupported mode, please use `Valid` or `Test`.")
+    if mode == "Valid":
+        writer.add_scalar("Valid/PSNR", psnres.avg, epoch + 1)
+    elif mode == "Test":
+        writer.add_scalar("Test/PSNR", psnres.avg, epoch + 1)
+    else:
+        raise ValueError("Unsupported mode, please use `Valid` or `Test`.")
 
     return psnres.avg
 

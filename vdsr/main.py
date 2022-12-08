@@ -13,6 +13,7 @@ import train as train_def
 from torch.cuda import amp
 import os
 from torch.utils.tensorboard import SummaryWriter
+import config
 
 
 epochs = 10
@@ -33,9 +34,21 @@ if __name__ == '__main__':
     writer = SummaryWriter(os.path.join("samples", "logs", "vdsr_pruning"))
 
     print("ORIGINAL UN-PRUNED MODEL: \n\n", model, "\n\n")
-    psnr = train_def.validate(model, test_prefetcher, psnr_criterion, 1, writer, "Test")
+    start_time = time.time()
+
+    for epoch in range(epochs):
+        train_def.train(model, train_prefetcher, psnr_criterion, pixel_criterion, optimizer, epoch, scaler, writer)
+        _ = train_def.validate(model, valid_prefetcher, psnr_criterion, epoch, writer, "Valid")
+    psnr = train_def.validate(model, test_prefetcher, psnr_criterion, epoch, writer, "Test")
+    # psnr = train_def.validate(model, test_prefetcher, psnr_criterion, 1, writer, "Test")
     print(f"******\nOriginal PSNR: {psnr}\n*****")
-    torch.save(model, f'./unpruned_model.torch')
+    print(f"Original model training time: {time.time() - start_time}")
+    # torch.save(model, f'./unpruned_model.torch')
+    torch.save({"epoch": epoch + 1,
+                "best_psnr": psnr,
+                "state_dict": model.state_dict(),
+                "optimizer": optimizer.state_dict()},
+                f"vdsr_unpruned_{config.upscale_factor}.pth.tar")
     print('Unpruned model saved')
 
     configuration_list = [{
@@ -67,22 +80,25 @@ if __name__ == '__main__':
     
     # Running the pre-training stage with pruned model
     
-
+    start_time = time.time()
     for epoch in range(epochs):
         train_def.train(model, train_prefetcher, psnr_criterion, pixel_criterion, optimizer, epoch, scaler, writer)
-        psnr = train_def.validate(model, test_prefetcher, psnr_criterion, epoch, writer, "Test")
-
-    print(f"\n********\nPSNR: {psnr}\n********\n")
-
-    torch.save(model, f'./pruned_model.torch')
+        _ = train_def.validate(model, valid_prefetcher, psnr_criterion, epoch, writer, "Valid")
+    psnr = train_def.validate(model, test_prefetcher, psnr_criterion, epoch, writer, "Test")
+    print(f"\n********\nPruned PSNR: {psnr}\n********\n")
+    print(f"Pruned model training time: {time.time() - start_time}")
+    torch.save({"epoch": epoch + 1,
+                "best_psnr": psnr,
+                "state_dict": model.state_dict(),
+                "optimizer": optimizer.state_dict()},
+                f"vdsr_pruned_{config.upscale_factor}.pth.tar")
     print('Pruned model saved')
-
     
     model.eval()
     torch.onnx.export(
         model,
         dummy_input.to(device),
-        "model.onnx",
+        f"vdsr_pruned_{config.upscale_factor}.onnx",
         export_params=True,
         do_constant_folding=True,
         input_names=["data"],
