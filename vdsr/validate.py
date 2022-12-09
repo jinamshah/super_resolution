@@ -68,7 +68,7 @@ if not os.path.exists(results_dir):
     os.makedirs(os.path.join(results_dir,"pruned"))
 
 unpruned_model_path = sys.argv[1]
-pruned_model_path = unpruned_model_path.replace("unpruned", "pruned")
+pruned_model_path = unpruned_model_path.replace("unpruned", "pruned").replace(".pth.tar", ".torch")
 
 device = torch.device("cuda", 0)
 
@@ -82,11 +82,7 @@ unpruned_model.half()
 
 process_images(unpruned_model, results_dir, 'unpruned')
 
-pruned_model = VDSR().to(device)
-print("Built unpruned VDSR model.")
-pruned_checkpoint = torch.load(pruned_model_path, map_location=lambda storage, loc: storage)
-pruned_model.load_state_dict(pruned_checkpoint["state_dict"])
-print("Unpruned model weights loaded")
+pruned_model = torch.load(pruned_model_path, map_location=device)
 pruned_model.eval()
 pruned_model.half()
 

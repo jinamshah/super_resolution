@@ -19,7 +19,8 @@ import config
 epochs = 10
 
 if __name__ == '__main__':
-    device = 'cuda'
+    # device = 'cuda'
+    device = torch.device("cuda", 0)
 
     model_chkpt = torch.load('vdsr-TB291-fef487db.pth.tar',map_location='cuda:0')
     model = VDSR().to(device)
@@ -87,11 +88,7 @@ if __name__ == '__main__':
     psnr = train_def.validate(model, test_prefetcher, psnr_criterion, epoch, writer, "Test")
     print(f"\n********\nPruned PSNR: {psnr}\n********\n")
     print(f"Pruned model training time: {time.time() - start_time}")
-    torch.save({"epoch": epoch + 1,
-                "best_psnr": psnr,
-                "state_dict": model.state_dict(),
-                "optimizer": optimizer.state_dict()},
-                f"vdsr_pruned_{config.upscale_factor}.pth.tar")
+    torch.save(model, f"vdsr_pruned_{config.upscale_factor}.torch")
     print('Pruned model saved')
     
     model.eval()
